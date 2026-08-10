@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<title>赋能看板</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#F0F2F5;font-family:'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;color:rgba(0,0,0,0.88);font-size:14px;line-height:1.5715;min-height:100vh;-webkit-tap-highlight-color:transparent}
+.num{font-family:'Barlow','Noto Sans SC','PingFang SC',sans-serif;font-variant-numeric:tabular-nums}
+
+/* === Header Card === */
+.header-card{background:linear-gradient(135deg,#0D47A1 0%,#1565C0 35%,#1890FF 100%);border-radius:6px;padding:24px 20px 18px;margin:12px;color:#fff;box-shadow:0 4px 16px rgba(13,71,161,0.25);position:relative;overflow:hidden}
+.header-card::before{content:'';position:absolute;top:-40px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.06)}
+.header-card::after{content:'';position:absolute;bottom:-20px;right:40px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.04)}
+.header-card .header-row1{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.header-title{display:flex;align-items:baseline;gap:6px}
+.header-title h3{font-size:24px;font-weight:700;letter-spacing:2px;margin:0}
+.header-card .header-row2{display:flex;align-items:center;gap:10px;margin-top:10px}
+.header-card .subtitle{font-size:11px;opacity:0.6;margin-top:10px;letter-spacing:0.5px}
+.level-tag{background:rgba(255,255,255,0.15);color:#fff;padding:3px 10px;border-radius:4px;font-size:12px;font-weight:500;display:inline-flex;align-items:center;gap:4px;border:0.667px solid rgba(255,255,255,0.25);backdrop-filter:blur(4px)}
+.level-tag svg{vertical-align:middle;flex-shrink:0}
+.date-tag{background:rgba(255,255,255,0.1);color:#fff;padding:3px 10px;border-radius:4px;font-size:12px;border:0.667px solid rgba(255,255,255,0.2);display:inline-flex;align-items:center;gap:6px;backdrop-filter:blur(4px)}
+.date-tag .date-text{font-size:12px;color:#fff;white-space:nowrap}
+.live-dot{width:8px;height:8px;border-radius:50%;background:#52C41A;display:inline-block;animation:pulse 1.5s ease-in-out infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(1.2)}}
+
+/* === Nav Tabs === */
+.nav-card{margin:0 12px 8px;background:#fff;border-radius:8px;padding:0;box-shadow:0 1px 2px 0 rgba(0,0,0,0.03),0 1px 6px -1px rgba(0,0,0,0.02),0 2px 4px 0 rgba(0,0,0,0.02);border-bottom:1px solid #F0F0F0}
+.nav-tabs{display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;position:relative}
+.nav-tabs::-webkit-scrollbar{display:none}
+.nav-tab{flex:none;text-align:center;padding:12px 16px;font-size:14px;color:rgba(0,0,0,0.65);cursor:pointer;transition:all 0.3s;white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:6px;position:relative;border-bottom:2px solid transparent}
+.nav-tab.active{background:rgba(24,144,255,0.08);color:#1890FF;font-weight:600;border-bottom:2px solid #1890FF}
+.nav-tab .tab-count{background:#F0F0F0;color:#999;font-size:11px;padding:1px 6px;border-radius:10px;font-weight:500}
+.nav-tab.active .tab-count{background:rgba(24,144,255,0.15);color:#1890FF}
+.nav-tab svg{width:16px;height:16px;flex-shrink:0}
+.nav-tab[data-tab="community"] svg{width:13px;height:13px}
+.nav-tab[data-tab="mgr"] svg{width:18px;height:18px}
+
+/* === Tab Panel === */
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* === Role Summary Card === */
+.summary-card{margin:0 12px 8px;background:#fff;border-radius:8px;padding:16px;box-shadow:0 1px 2px 0 rgba(0,0,0,0.03),0 1px 6px -1px rgba(0,0,0,0.02),0 2px 4px 0 rgba(0,0,0,0.02)}
+.summary-title{font-size:14px;font-weight:600;color:#333;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.summary-title::before{content:'';width:3px;height:14px;background:#1890FF;border-radius:2px;flex-shrink:0}
+.summary-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.summary-item{background:#FAFAFA;border:1px solid #F0F0F0;border-radius:6px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between}
+.summary-item-label{font-size:12px;color:rgba(0,0,0,0.45);white-space:nowrap}
+.summary-item-value{font-size:18px;font-weight:600;font-family:'Barlow','Noto Sans SC',sans-serif;font-variant-numeric:tabular-nums;line-height:1}
+.summary-item-value.blue{color:#1890FF}
+.summary-item-value.green{color:#389E0D}
+.summary-item-value.orange{color:#D48806}
+.summary-item-value.red{color:#CF132C}
+
+/* === Person Card === */
+.person-card{margin:0 12px 8px;background:#fff;border-radius:8px;padding:16px;box-shadow:0 1px 2px 0 rgba(0,0,0,0.03),0 1px 6px -1px rgba(0,0,0,0.02),0 2px 4px 0 rgba(0,0,0,0.02)}
+.person-header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:#fff;flex-shrink:0}
+.avatar.blue{background:linear-gradient(135deg,#1890FF,#096DB9)}
+.avatar.green{background:linear-gradient(135deg,#52C41A,#389E0D)}
+.avatar.orange{background:linear-gradient(135deg,#FA8C16,#D48806)}
+.avatar.purple{background:linear-gradient(135deg,#722ED1,#531DAB)}
+.person-name{font-size:15px;font-weight:600;color:#333}
+.person-meta{font-size:12px;color:#999;margin-top:2px}
+.person-status{margin-left:auto;display:flex;align-items:center;gap:4px;font-size:12px}
+.status-tag{padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.status-active{background:#F6FFED;color:#389E0D;border:1px solid #B7EB8F}
+.status-warn{background:#FFF7E6;color:#D48806;border:1px solid #FFD591}
+.status-risk{background:#FFF1F0;color:#CF132C;border:1px solid #FFA39E}
+
+/* === Metric Row === */
+.metric-section-title{font-size:12px;font-weight:600;color:#999;margin-bottom:10px;display:flex;align-items:center;gap:4px}
+.metric-section-title::before{content:'';width:2px;height:12px;background:#1890FF;opacity:0.4;border-radius:1px}
+.metric-list{display:flex;flex-direction:column;gap:12px}
+.metric-item{display:flex;align-items:center;gap:10px}
+.metric-label{font-size:13px;color:#333;width:70px;flex-shrink:0;text-align:right}
+.metric-bar-wrap{flex:1;height:20px;background:#F5F5F5;border-radius:10px;overflow:hidden;position:relative}
+.metric-bar{height:100%;border-radius:10px;transition:width 0.8s ease;position:relative;min-width:4px}
+.metric-bar.over{background:linear-gradient(90deg,#389E0D,#52C41A)}
+.metric-bar.green{background:linear-gradient(90deg,#52C41A,#73D13D)}
+.metric-bar.blue{background:linear-gradient(90deg,#1890FF,#40A9FF)}
+.metric-bar.orange{background:linear-gradient(90deg,#D48806,#FA8C16)}
+.metric-bar.red{background:linear-gradient(90deg,#CF132C,#F5222D)}
+.metric-bar.info{background:#E8F0FE}
+.metric-bar-wrap.zero-alert{background:#FFE0E0}
+.metric-bar-text{position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:11px;font-weight:700;color:#333;white-space:nowrap;padding-right:8px;pointer-events:none;-webkit-text-stroke:0.5px #fff;paint-order:stroke fill}
+.metric-bar-text.zero{color:#CF132C;-webkit-text-stroke:0.5px #FFE}
+.metric-bar-center{position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:12px;font-weight:600;color:#1890FF;white-space:nowrap;padding-right:8px;pointer-events:none}
+.metric-bar-center.zero{color:#CF132C}
+
+/* === Todo Order Row === */
+.todo-section-title{font-size:12px;font-weight:600;color:#8C6D1F;margin:16px 0 10px;display:flex;align-items:center;gap:4px}
+.todo-section-title::before{content:'';width:2px;height:12px;background:#D48806;opacity:0.5;border-radius:1px}
+.todo-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.todo-item{display:flex;align-items:center;gap:6px}
+.todo-badge{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 10px;border-radius:12px;font-size:12px;font-weight:600;font-family:'Barlow','Noto Sans SC',sans-serif;font-variant-numeric:tabular-nums;background:#FFF7E6;color:#D48806;border:1px solid #FFD591;white-space:nowrap}
+.todo-badge .todo-label{font-size:12px;color:#8C6D1F;font-weight:500}
+.todo-badge .todo-num{font-weight:700;font-size:13px;color:#D48806}
+.todo-badge .todo-unit{font-size:10px;color:#999;font-weight:400}
+.todo-badge.zero{background:#F5F5F5;border-color:#E8E8E8}
+.todo-badge.zero .todo-label,.todo-badge.zero .todo-num,.todo-badge.zero .todo-unit{color:#BFBFBF}
+.todo-badge.urgent{background:#FFF1F0;border-color:#FFA39E;animation:todoPulse 2s ease-in-out infinite}
+.todo-badge.urgent .todo-label,.todo-badge.urgent .todo-num{color:#CF132C}
+@keyframes todoPulse{0%,100%{opacity:1}50%{opacity:0.7}}
+
+/* === Overall Score === */
+.overall-score{display:flex;align-items:center;gap:16px;padding:12px;background:linear-gradient(135deg,rgba(24,144,255,0.05),rgba(24,144,255,0.02));border:1px solid #91D5FF;border-radius:8px;margin-bottom:14px}
+.score-ring{width:56px;height:56px;flex-shrink:0}
+.score-info{flex:1}
+.score-label{font-size:12px;color:#999}
+.score-value{font-size:22px;font-weight:700;font-family:'Barlow','Noto Sans SC',sans-serif;color:#1890FF;line-height:1.2;margin-top:2px}
+.score-rank{font-size:12px;color:#666;margin-top:2px}
+.score-rank .highlight{color:#1890FF;font-weight:600}
+
+/* === Empty === */
+.empty-state{text-align:center;padding:40px 20px;color:#bbb;font-size:13px}
+
+/* === Responsive === */
+@media(min-width:769px){
+  .header-card{padding:20px 32px}
+  .nav-card{margin:0 24px 12px}
+  .summary-card,.person-card{margin:0 24px 8px;padding:20px 24px}
+  .nav-tab{padding:12px 24px}
+}
+@media(min-width:1200px){
+  .header-card{padding:24px 40px;margin:16px 24px}
+  .nav-card{margin:0 24px 12px}
+  .summary-card,.person-card{margin:0 24px 12px;padding:24px}
+}
+@media(max-width:768px){
+  .header-card{padding:16px 12px 14px}
+  .header-title h3{font-size:20px;letter-spacing:1px}
+  .nav-card{margin:0 8px 8px}
+  .nav-tab{padding:8px 12px;font-size:13px}
+  .summary-card,.person-card{margin:0 8px 8px;padding:12px}
+  .summary-grid{grid-template-columns:repeat(2,1fr);gap:6px}
+  .summary-item{padding:8px 10px}
+  .summary-item-value{font-size:16px}
+  .metric-label{font-size:12px;width:60px}
+  .metric-bar-wrap{height:18px}
+  .person-header{margin-bottom:10px}
+  .avatar{width:36px;height:36px;font-size:14px}
+}
+@media(max-width:480px){
+  .header-card{padding:12px 10px 10px;margin:6px}
+  .header-title h3{font-size:17px;letter-spacing:1px}
+  .nav-card{margin:0 6px 6px}
+  .nav-tab{padding:6px 8px;font-size:12px}
+  .summary-card,.person-card{margin:0 6px 6px;padding:10px}
+  .summary-grid{grid-template-columns:repeat(2,1fr);gap:4px}
+  .summary-item{padding:6px 8px}
+  .summary-item-value{font-size:14px}
+  .summary-item-label{font-size:11px}
+  .metric-label{font-size:11px;width:52px}
+  .metric-bar-wrap{height:16px}
+  .metric-bar-text{font-size:9px;padding-right:4px}
+  .metric-bar-center{font-size:10px;padding-right:4px}
+  .ring-svg{width:54px;height:54px}
+  .ring-label{font-size:10px}
+  .score-value{font-size:18px}
+  .person-name{font-size:14px}
+  .avatar{width:32px;height:32px;font-size:13px}
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header-card">
+  <div class="header-row1">
+    <div class="header-title">
+      <h3>赋能看板</h3>
+    </div>
+  </div>
+  <div class="header-row2">
+    <span class="level-tag" id="branchTag">
+      <svg viewBox="64 64 896 896" width="14" height="14" fill="currentColor"><path d="M946.5 505L534.6 93.4a31.93 31.93 0 00-45.2 0L77.5 505c-12 12-18.8 28.3-18.8 45.3 0 35.3 28.7 64 64 64h43.4V908c0 17.7 14.3 32 32 32H448V748h128v192h250c17.7 0 32-14.3 32-32V614.3h43.4c17 0 33.3-6.8 45.3-18.8 24.9-24.9 24.9-65.5 0-90.5z"></path></svg>
+      海州鼓楼支局
+    </span>
+    <span class="date-tag" id="dateTag">
+      <span class="live-dot"></span>
+      <span class="date-text" id="dateText">2026 年 08 月 06 日 星期四</span>
+    </span>
+  </div>
+  <div class="subtitle">实时跟踪工作过程，精准赋能一线提质增效</div>
+</div>
+
+<!-- Nav Tabs -->
+<div class="nav-card">
+  <div class="nav-tabs" id="navTabs">
+    <div class="nav-tab active" data-tab="mgr" data-role="manager">
+      <svg viewBox="64 64 896 896" width="1em" height="1em" fill="currentColor"><path d="M824.2 699.9a301.55 301.55 0 00-86.4-60.4C783.1 602.8 812 546.8 812 484c0-110.8-92.4-201.7-203.2-200-109.1 1.7-197 90.6-197 200 0 62.8 29 118.8 74.2 155.5a300.95 300.95 0 00-86.4 60.4C345 754.6 314 826.8 312 903.8a8 8 0 008 8.2h56c4.3 0 7.9-3.4 8-7.7 1.9-58 25.4-112.3 66.7-153.5A226.62 226.62 0 01612 684c60.9 0 118.2 23.7 161.3 66.8C814.5 792 838 846.3 840 904.3c.1 4.3 3.7 7.7 8 7.7h56a8 8 0 008-8.2c-2-77-33-149.2-87.8-203.9zM612 612c-34.2 0-66.4-13.3-90.5-37.5a126.86 126.86 0 01-37.5-91.8c.3-32.8 13.4-64.5 36.3-88 24-24.6 56.1-38.3 90.4-38.7 33.9-.3 66.8 12.9 91 36.6 24.8 24.3 38.4 56.8 38.4 91.4 0 34.2-13.3 66.3-37.5 90.5A127.3 127.3 0 01612 612z"></path></svg>
+      营服经理<span class="tab-count" id="count-mgr">5</span>
+    </div>
+    <div class="nav-tab" data-tab="community" data-role="community">
+      <svg viewBox="64 64 896 896" width="1em" height="1em" fill="currentColor"><path d="M946.5 505L534.6 93.4a31.93 31.93 0 00-45.2 0L77.5 505c-12 12-18.8 28.3-18.8 45.3 0 35.3 28.7 64 64 64h43.4V908c0 17.7 14.3 32 32 32H448V748h128v192h250c17.7 0 32-14.3 32-32V614.3h43.4c17 0 33.3-6.8 45.3-18.8 24.9-24.9 24.9-65.5 0-90.5z"></path></svg>
+      社区经理<span class="tab-count" id="count-community">4</span>
+    </div>
+    <div class="nav-tab" data-tab="clerk" data-role="clerk">
+      <svg viewBox="64 64 896 896" width="1em" height="1em" fill="currentColor"><path d="M361.5 510.4c-.9-8.7-1.4-17.5-1.4-26.4 0-15.9 1.5-31.4 4.3-46.5.7-3.6-1.2-7.3-4.5-8.8-13.6-6.1-26.1-14.5-36.9-25.1a127.54 127.54 0 01-38.7-95.4c.9-32.1 13.8-62.6 36.3-85.6 24.7-25.3 57.9-39.1 93.2-38.7 31.9.3 62.7 12.6 86 34.4 7.9 7.4 14.7 15.6 20.4 24.4 2 3.1 5.9 4.4 9.3 3.2 17.6-6.1 36.2-10.4 55.3-12.4 5.6-.6 8.8-6.6 6.3-11.6-32.5-64.3-98.9-108.7-175.7-109.9-110.9-1.7-203.3 89.2-203.3 199.9 0 62.8 28.9 118.8 74.2 155.5-31.8 14.7-61.1 35-86.5 60.4-54.8 54.7-85.8 126.9-87.8 204a8 8 0 008 8.2h56.1c4.3 0 7.9-3.4 8-7.7 1.9-58 25.4-112.3 66.7-153.5 29.4-29.4 65.4-49.8 104.7-59.7 3.9-1 6.5-4.7 6-8.7z"></path><path d="M824.2 699.9a301.55 301.55 0 00-86.4-60.4C783.1 602.8 812 546.8 812 484c0-110.8-92.4-201.7-203.2-200-109.1 1.7-197 90.6-197 200 0 62.8 29 118.8 74.2 155.5a300.95 300.95 0 00-86.4 60.4C345 754.6 314 826.8 312 903.8a8 8 0 008 8.2h56c4.3 0 7.9-3.4 8-7.7 1.9-58 25.4-112.3 66.7-153.5A226.62 226.62 0 01612 684c60.9 0 118.2 23.7 161.3 66.8C814.5 792 838 846.3 840 904.3c.1 4.3 3.7 7.7 8 7.7h56a8 8 0 008-8.2c-2-77-33-149.2-87.8-203.9zM612 612c-34.2 0-66.4-13.3-90.5-37.5a126.86 126.86 0 01-37.5-91.8c.3-32.8 13.4-64.5 36.3-88 24-24.6 56.1-38.3 90.4-38.7 33.9-.3 66.8 12.9 91 36.6 24.8 24.3 38.4 56.8 38.4 91.4 0 34.2-13.3 66.3-37.5 90.5A127.3 127.3 0 01612 612z"></path></svg>
+      营业员<span class="tab-count" id="count-clerk">3</span>
+    </div>
+    <div class="nav-tab" data-tab="specialist" data-role="specialist">
+      <svg viewBox="64 64 896 896" width="1em" height="1em" fill="currentColor"><path d="M880 184H712v-64c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v64H384v-64c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v64H144c-17.7 0-32 14.3-32 32v664c0 17.7 14.3 32 32 32h736c17.7 0 32-14.3 32-32V216c0-17.7-14.3-32-32-32zm-40 656H184V460h656v380zM184 392V256h128v48c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8v-48h256v48c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8v-48h128v136H184z"></path></svg>
+      客经专员<span class="tab-count" id="count-specialist">1</span>
+    </div>
+  </div>
+</div>
+
+<!-- Panel: 营服经理 -->
+<div class="tab-panel active" id="panel-mgr"></div>
+<!-- Panel: 社区经理 -->
+<div class="tab-panel" id="panel-community"></div>
+<!-- Panel: 营业员 -->
+<div class="tab-panel" id="panel-clerk"></div>
+<!-- Panel: 客经专员 -->
+<div class="tab-panel" id="panel-specialist"></div>
+
+<script>
+var ROLES = {
+  manager: {
+    label: '营服经理',
+    metrics: [
+      {key:'new_pts',  label:'新量积分', target:0,   unit:'分'},
+      {key:'up_pts',   label:'提值积分', target:0,   unit:'分'},
+      {key:'touch',    label:'触客',     target:5,   unit:'次'},
+      {key:'business', label:'商机',     target:3,   unit:'个'},
+      {key:'call',     label:'外呼',     target:0,   unit:'次'},
+      {key:'visit',    label:'上门',     target:0,   unit:'次'},
+      {key:'fans',     label:'吸粉',     target:2,   unit:'个'}
+    ],
+    todos: [
+      {key:'todo_call',  label:'在岗外呼单', target:0, unit:'单'},
+      {key:'todo_visit', label:'在岗上门单', target:0, unit:'单'}
+    ]
+  },
+  community: {
+    label: '社区经理',
+    metrics: [
+      {key:'new_pts',  label:'新量积分', target:0,   unit:'分'},
+      {key:'up_pts',   label:'提值积分', target:0,   unit:'分'},
+      {key:'touch',    label:'触客',     target:5,   unit:'次'},
+      {key:'business', label:'商机',     target:3,   unit:'个'},
+      {key:'fix5',     label:'装维五单', target:0,   unit:'单'},
+      {key:'visit2',   label:'其他上门', target:0,   unit:'次'},
+      {key:'fans',     label:'吸粉',     target:2,   unit:'个'}
+    ],
+    todos: [
+      {key:'todo_line',  label:'在岗外线单', target:0, unit:'单'},
+      {key:'todo_visit', label:'在岗上门单', target:0, unit:'单'}
+    ]
+  },
+  specialist: {
+    label: '客经专员',
+    metrics: [
+      {key:'new_pts',  label:'新量积分', target:0,   unit:'分'},
+      {key:'up_pts',   label:'提值积分', target:0,   unit:'分'},
+      {key:'retain',   label:'拆降挽留', target:0,   unit:'次'},
+      {key:'call',     label:'外呼',     target:0,   unit:'次'}
+    ],
+    todos: [
+      {key:'todo_call',  label:'在岗外呼单', target:0, unit:'单'}
+    ]
+  },
+  clerk: {
+    label: '营业员',
+    metrics: [
+      {key:'new_pts',  label:'新量积分', target:0,   unit:'分'},
+      {key:'up_pts',   label:'提值积分', target:0,   unit:'分'},
+      {key:'reform',   label:'套改',     target:0,   unit:'户'}
+    ],
+    todos: [
+      {key:'todo_call',  label:'在岗外呼单', target:0, unit:'单'}
+    ]
+  }
+};
+
+// ====== Mock Personnel Data ======
+var PERSONNEL = {
+  manager: [
+    {name:'张明',  color:'blue',  metrics:{new_pts:86,  up_pts:55, touch:18, business:6, call:12, visit:5, fans:6},  todos:{todo_call:3, todo_visit:2}, status:'active'},
+    {name:'李娟',  color:'blue',  metrics:{new_pts:72,  up_pts:65, touch:14, business:4, call:8, visit:3, fans:4},   todos:{todo_call:1, todo_visit:1}, status:'active'},
+    {name:'王强',  color:'blue',  metrics:{new_pts:55,  up_pts:40, touch:11, business:3, call:5, visit:2, fans:2},   todos:{todo_call:5, todo_visit:3}, status:'warn'},
+    {name:'刘洋',  color:'blue',  metrics:{new_pts:90,  up_pts:70, touch:20, business:7, call:15, visit:5, fans:8},  todos:{todo_call:0, todo_visit:0}, status:'active'},
+    {name:'陈伟',  color:'blue',  metrics:{new_pts:0,   up_pts:25, touch:0,  business:0, call:3, visit:1, fans:0},   todos:{todo_call:7, todo_visit:4}, status:'risk'}
+  ],
+  community: [
+    {name:'赵芳',  color:'green', metrics:{new_pts:65,  up_pts:45, touch:22, business:4, fix5:6, visit2:4, fans:5},  todos:{todo_line:2, todo_visit:1}, status:'active'},
+    {name:'孙婷',  color:'green', metrics:{new_pts:58,  up_pts:35, touch:18, business:2, fix5:3, visit2:2, fans:3},  todos:{todo_line:4, todo_visit:2}, status:'warn'},
+    {name:'周琳',  color:'green', metrics:{new_pts:48,  up_pts:30, touch:15, business:2, fix5:5, visit2:3, fans:4},  todos:{todo_line:3, todo_visit:3}, status:'warn'},
+    {name:'吴敏',  color:'green', metrics:{new_pts:62,  up_pts:42, touch:25, business:5, fix5:7, visit2:5, fans:6},  todos:{todo_line:1, todo_visit:0}, status:'active'}
+  ],
+  specialist: [
+    {name:'郑涛',  color:'orange',metrics:{new_pts:82,  up_pts:58, retain:6, call:12},  todos:{todo_call:2}, status:'active'}
+  ],
+  clerk: [
+    {name:'钱丽',  color:'purple',metrics:{new_pts:55,  up_pts:32, reform:4},  todos:{todo_call:1}, status:'active'},
+    {name:'周婷',  color:'purple',metrics:{new_pts:42,  up_pts:28, reform:2},  todos:{todo_call:4}, status:'warn'},
+    {name:'方敏',  color:'purple',metrics:{new_pts:60,  up_pts:35, reform:5},  todos:{todo_call:0}, status:'active'}
+  ]
+};
+
+// ====== Helpers ======
+function ri(a,b){return Math.floor(Math.random()*(b-a+1))+a}
+
+function getColor(pct){
+  if(pct>=100) return 'over';
+  if(pct>=75) return 'green';
+  if(pct>=50) return 'blue';
+  if(pct>=30) return 'orange';
+  return 'red';
+}
+
+function getStatusTag(status){
+  if(status==='active') return '<span class="status-tag status-active">表现良好</span>';
+  if(status==='warn') return '<span class="status-tag status-warn">需关注</span>';
+  if(status==='risk') return '<span class="status-tag status-risk">需帮扶</span>';
+  return '';
+}
+
+// ====== Rendering ======
+function renderSummary(role){
+  var data = PERSONNEL[role];
+  var metrics = ROLES[role].metrics;
+  var n = data.length;
+  var totals = {};
+  metrics.forEach(function(m){totals[m.key]={sum:0,target:0}});
+
+  data.forEach(function(p){
+    metrics.forEach(function(m){
+      totals[m.key].sum += p.metrics[m.key];
+      totals[m.key].target += m.target;
+    });
+  });
+
+  var avgRate = 0, cnt = 0;
+  Object.keys(totals).forEach(function(k){
+    var m = metrics.find(function(x){return x.key===k});
+    if(m && m.target > 0 && totals[k].target > 0){
+      avgRate += totals[k].sum / totals[k].target;
+      cnt++;
+    }
+  });
+  avgRate = cnt > 0 ? Math.round(avgRate / cnt * 100) : -1;
+
+  var html = '<div class="summary-card">';
+  html += '<div class="summary-title">' + ROLES[role].label + '团队概览</div>';
+  html += '<div class="summary-grid">';
+
+  // 总体完成率
+  if(avgRate >= 0){
+    var avgColor = getColor(avgRate);
+    html += '<div class="summary-item"><span class="summary-item-label">总体完成率</span><span class="summary-item-value ' + avgColor + '">' + avgRate + '%</span></div>';
+  }
+  html += '<div class="summary-item"><span class="summary-item-label">在岗人数</span><span class="summary-item-value blue">' + n + '人</span></div>';
+
+  // 每个指标的汇总
+  metrics.forEach(function(m){
+    var avg = n > 0 ? (totals[m.key].sum / n).toFixed(0) : 0;
+    if(m.target > 0){
+      var avgPct = totals[m.key].target > 0 ? Math.round((totals[m.key].sum / totals[m.key].target) * 100) : 0;
+      var c = getColor(avgPct);
+      html += '<div class="summary-item"><span class="summary-item-label">人均' + m.label + '</span><span class="summary-item-value ' + c + '">' + avg + m.unit + '</span></div>';
+    } else {
+      html += '<div class="summary-item"><span class="summary-item-label">人均' + m.label + '</span><span class="summary-item-value" style="color:#333">' + avg + m.unit + '</span></div>';
+    }
+  });
+
+  html += '</div></div>';
+
+  // Todo summary - hidden
+  /*
+  var todoItems = ROLES[role].todos || [];
+  if(todoItems.length > 0){
+    html += '<div class="summary-card">';
+    html += '<div class="summary-title">待办工单</div>';
+    html += '<div class="summary-grid">';
+    todoItems.forEach(function(t){
+      var total = 0;
+      data.forEach(function(p){ total += (p.todos ? (p.todos[t.key] || 0) : 0); });
+      var cls = total === 0 ? ' zero' : (total >= 10 ? ' red' : ' orange');
+      html += '<div class="summary-item"><span class="summary-item-label">' + t.label + '</span><span class="summary-item-value ' + cls + '">' + total + t.unit + '</span></div>';
+    });
+    html += '</div></div>';
+  }
+  */
+
+  return html;
+}
+
+function renderPerson(person, role, index){
+  var metrics = ROLES[role].metrics;
+  var colorClass = person.color || 'blue';
+
+  // 计算个人总体完成率（仅计有目标的指标）
+  var totalPct = 0, cnt = 0;
+  metrics.forEach(function(m){
+    if(m.target > 0){
+      var pct = Math.min(person.metrics[m.key] / m.target * 100, 150);
+      totalPct += pct;
+      cnt++;
+    }
+  });
+  totalPct = cnt > 0 ? Math.round(totalPct / cnt) : -1;
+  var scoreColor = getColor(totalPct);
+
+  var html = '<div class="person-card">';
+  // Person Header
+  html += '<div class="person-header">';
+  html += '<div class="avatar ' + colorClass + '">' + person.name.charAt(0) + '</div>';
+  html += '<div><div class="person-name">' + person.name + '</div>';
+  html += '<div class="person-meta">' + ROLES[role].label + ' · No.' + (index+1) + '</div></div>';
+  html += '<div class="person-status">' + getStatusTag(person.status) + '</div>';
+  html += '</div>';
+
+  // Overall Score (only if has target metrics)
+  if(totalPct >= 0){
+    var scoreColor = getColor(totalPct);
+    html += '<div class="overall-score">';
+    html += renderScoreRing(totalPct, scoreColor);
+    html += '<div class="score-info"><div class="score-label">综合完成率</div>';
+    html += '<div class="score-value">' + totalPct + '%</div>';
+    var rank = index + 1;
+    html += '<div class="score-rank">团队排名 <span class="highlight">第' + rank + '名</span> / 共' + PERSONNEL[role].length + '人</div>';
+    html += '</div></div>';
+  }
+
+  // Work Productivity Metrics
+  html += '<div class="metric-section-title">工作产能</div>';
+  html += '<div class="metric-list">';
+  metrics.forEach(function(m){
+    var val = person.metrics[m.key];
+    html += '<div class="metric-item">';
+    html += '<div class="metric-label">' + m.label + '</div>';
+    var zeroAlertClass = (val === 0) ? ' zero-alert' : '';
+    html += '<div class="metric-bar-wrap' + zeroAlertClass + '">';
+    if(m.target > 0){
+      // 有固定目标：进度条按完成率填充+颜色
+      var pct = Math.min(val / m.target * 100, 150);
+      var barColor = getColor(pct);
+      var barWidth = Math.min(pct, 100);
+      html += '<div class="metric-bar ' + barColor + '" style="width:' + barWidth + '%"></div>';
+      html += '<span class="metric-bar-text' + (val === 0 ? ' zero' : '') + '">(' + Math.round(pct) + '%) ' + val + '/' + m.target + m.unit + '</span>';
+    } else {
+      // 无固定目标：浅色满条
+      var zeroClass = val === 0 ? ' zero' : '';
+      html += '<div class="metric-bar info" style="width:100%"></div>';
+      html += '<span class="metric-bar-center' + zeroClass + '">' + val + m.unit + '</span>';
+    }
+    html += '</div></div>';
+  });
+  html += '</div>';
+
+  // Todo Orders
+  var todoItems = ROLES[role].todos || [];
+  if(todoItems.length > 0){
+    html += '<div class="todo-section-title">待办工单</div>';
+    html += '<div class="todo-row">';
+    todoItems.forEach(function(t){
+      var val = person.todos ? (person.todos[t.key] || 0) : 0;
+      var cls = val === 0 ? ' zero' : (val >= 5 ? ' urgent' : '');
+      html += '<span class="todo-badge' + cls + '">';
+      html += '<span class="todo-label">' + t.label + '</span>';
+      html += '<span class="todo-num">' + val + '</span>';
+      html += '<span class="todo-unit">' + t.unit + '</span>';
+      html += '</span>';
+    });
+    html += '</div>';
+  }
+
+  html += '</div>';
+  return html;
+}
+
+function renderScoreRing(pct, colorClass){
+  var r = 22, c = 2 * Math.PI * r;
+  var offset = c * (1 - Math.min(pct,100) / 100);
+  var strokeColor = pct >= 100 ? '#389E0D' : (pct >= 75 ? '#52C41A' : (pct >= 50 ? '#1890FF' : (pct >= 30 ? '#D48806' : '#CF132C')));
+  return '<svg class="score-ring" viewBox="0 0 56 56">' +
+    '<circle cx="28" cy="28" r="22" stroke="#F0F0F0" stroke-width="5" fill="none"/>' +
+    '<circle cx="28" cy="28" r="22" stroke="' + strokeColor + '" stroke-width="5" fill="none" stroke-linecap="round" stroke-dasharray="' + c + '" stroke-dashoffset="' + offset + '" transform="rotate(-90 28 28)"/>' +
+    '<text x="28" y="33" text-anchor="middle" font-size="13" font-weight="700" fill="' + strokeColor + '" font-family="Barlow,sans-serif">' + pct + '%</text>' +
+    '</svg>';
+}
+
+function renderPanel(role){
+  var html = renderSummary(role);
+  PERSONNEL[role].forEach(function(p, idx){
+    html += renderPerson(p, role, idx);
+  });
+  return html;
+}
+
+// ====== Init ======
+function init(){
+  document.getElementById('panel-mgr').innerHTML = renderPanel('manager');
+  document.getElementById('panel-community').innerHTML = renderPanel('community');
+  document.getElementById('panel-clerk').innerHTML = renderPanel('clerk');
+  document.getElementById('panel-specialist').innerHTML = renderPanel('specialist');
+
+  // Update counts
+  document.getElementById('count-mgr').textContent = PERSONNEL.manager.length;
+  document.getElementById('count-community').textContent = PERSONNEL.community.length;
+  document.getElementById('count-clerk').textContent = PERSONNEL.clerk.length;
+  document.getElementById('count-specialist').textContent = PERSONNEL.specialist.length;
+
+  // Tab switching
+  var tabs = document.querySelectorAll('.nav-tab');
+  var panels = document.querySelectorAll('.tab-panel');
+  tabs.forEach(function(tab){
+    tab.addEventListener('click', function(){
+      tabs.forEach(function(t){t.classList.remove('active')});
+      tab.classList.add('active');
+      panels.forEach(function(p){p.classList.remove('active')});
+      var panelId = 'panel-' + tab.dataset.tab;
+      document.getElementById(panelId).classList.add('active');
+    });
+  });
+}
+
+init();
+</script>
+</body>
+</html>
